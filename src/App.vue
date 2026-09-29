@@ -33,8 +33,11 @@ onMounted(async () => {
     const MoeAuth = MoeAuthStore();
     await MoeAuth.initDevice();
 
-    // 刷新登录态，延长 token 有效期
-    MoeAuth.refreshToken();
+    // 刷新登录态，延长 token 有效期；网络未就绪时稍后重试
+    MoeAuth.refreshToken().then(ok => {
+        if (!ok) setTimeout(() => MoeAuth.refreshToken(), 5000);
+    });
+    const refreshTimer = setInterval(() => MoeAuth.refreshToken(), 12 * 60 * 60 * 1000);
 
     // 初始化状态栏歌词
     cleanupStatusBarIPC = statusBarLyricsRef.value?.initStatusBar(logoImageSrc, settings);
@@ -43,6 +46,7 @@ onMounted(async () => {
 onUnmounted(() => {
     statusBarLyricsRef.value?.cleanupStatusBar();
     cleanupStatusBarIPC?.();
+    clearInterval(refreshTimer);
 });
 </script>
 

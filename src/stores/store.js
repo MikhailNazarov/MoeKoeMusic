@@ -30,8 +30,9 @@ export const MoeAuthStore = defineStore('MoeData', {
         // 刷新登录：使用 t1 链延长 token，减少重新登录
         async refreshToken() {
             const info = this.UserInfo;
-            if (!info?.token) return false;
-            const authParts = [`token=${info.token}`, `userid=${info.userid}`];
+            if (!info?.token) return true; // 未登录：无需刷新
+            const authParts = [`token=${info.token}`];
+            if (info.userid) authParts.push(`userid=${info.userid}`);
             if (this.Device?.dfid) authParts.push(`dfid=${this.Device.dfid}`);
             if (info.t1) authParts.push(`t1=${info.t1}`);
             try {
@@ -47,7 +48,7 @@ export const MoeAuthStore = defineStore('MoeData', {
             } catch (error) {
                 console.error('refreshToken failed:', error);
             }
-            return false;
+            return false; // 网络失败：稍后重试
         },
         async initDevice() {
             if (this.Device) return this.Device;
